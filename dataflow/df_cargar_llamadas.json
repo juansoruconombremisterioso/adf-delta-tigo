@@ -1,0 +1,88 @@
+{
+	"name": "df_cargar_llamadas",
+	"properties": {
+		"folder": {
+			"name": "BRONZE"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_entel_llamadas_csv",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_entel_llamadas_csv",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          SERVICIO as string,",
+				"          REGISTRO as string,",
+				"          NUMERO_A as string,",
+				"          IMEI_A as string,",
+				"          {RBS UTILIZADA_A} as string,",
+				"          CELDA_A as string,",
+				"          LATITUD_LONGITUD_A as string,",
+				"          NUMERO_B as string,",
+				"          IMEI_B as string,",
+				"          RBS_UTILIZADA_B as string,",
+				"          CELDA_B as string,",
+				"          LATITUD_LONGITUD_B as string,",
+				"          FECHA as string,",
+				"          DURACION as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          SERVICIO as string,",
+				"          REGISTRO as string,",
+				"          NUMERO_A as string,",
+				"          IMEI_A as string,",
+				"          {RBS UTILIZADA_A} as string,",
+				"          CELDA_A as string,",
+				"          LATITUD_LONGITUD_A as string,",
+				"          NUMERO_B as string,",
+				"          IMEI_B as string,",
+				"          RBS_UTILIZADA_B as string,",
+				"          CELDA_B as string,",
+				"          LATITUD_LONGITUD_B as string,",
+				"          FECHA as string,",
+				"          DURACION as string",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1,",
+				"     mapColumn(",
+				"          SERVICIO,",
+				"          REGISTRO,",
+				"          NUMERO_A,",
+				"          IMEI_A,",
+				"          {RBS UTILIZADA_A},",
+				"          CELDA_A,",
+				"          LATITUD_LONGITUD_A,",
+				"          NUMERO_B,",
+				"          IMEI_B,",
+				"          RBS_UTILIZADA_B,",
+				"          CELDA_B,",
+				"          LATITUD_LONGITUD_B,",
+				"          FECHA,",
+				"          DURACION",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}
