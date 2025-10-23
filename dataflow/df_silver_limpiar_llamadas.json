@@ -80,7 +80,7 @@
 				"          imei_b,",
 				"          rbs_utilizada_b,",
 				"          celda_b,",
-				"          fecha = duracion,",
+				"          fecha,",
 				"          duracion,",
 				"          latitud_a,",
 				"          latitud_b,",
