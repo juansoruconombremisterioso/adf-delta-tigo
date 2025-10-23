@@ -15,13 +15,24 @@
 					"name": "source1"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_datos_entel",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
 				{
 					"name": "cast1"
 				},
 				{
-					"name": "derivedColumn1"
+					"name": "select1"
 				}
 			],
 			"scriptLines": [
@@ -41,12 +52,56 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> source1",
+				"source1 derive(fecha_inicio = toTimestamp(fecha_inicio, 'dd-MM-yyyy HH:mm:ss'),",
+				"          fecha_fin = toTimestamp(fecha_fin, 'dd-MM-yyyy HH:mm:ss'),",
+				"          latitud = split(latitud_longitud, ',')[0],",
+				"          longitud = split(latitud_longitud, ',')[1]) ~> derivedColumn1",
 				"derivedColumn1 cast(output(",
-				"          fecha_inicio as date",
+				"          subidos as integer,",
+				"          descargados as integer,",
+				"          total as integer,",
+				"          latitud as decimal(10,0),",
+				"          longitud as decimal(10,0)",
 				"     ),",
 				"     errors: true) ~> cast1",
-				"source1 derive(fecha_inicio = split(fecha_inicio, ' ')[0],",
-				"          fecha_fin = split(fecha_fin, ' ')[0]) ~> derivedColumn1"
+				"cast1 select(mapColumn(",
+				"          fecha_inicio,",
+				"          fecha_fin,",
+				"          numero,",
+				"          imei,",
+				"          rbs_utilizada,",
+				"          celda,",
+				"          subidos,",
+				"          descargados,",
+				"          total,",
+				"          latitud,",
+				"          longitud",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          fecha_inicio as timestamp,",
+				"          fecha_fin as timestamp,",
+				"          numero as string,",
+				"          imei as string,",
+				"          rbs_utilizada as string,",
+				"          celda as string,",
+				"          latitud as decimal(18,0),",
+				"          longitud as decimal(18,0),",
+				"          subidos as integer,",
+				"          descargados as integer,",
+				"          total as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
 			]
 		}
 	}
