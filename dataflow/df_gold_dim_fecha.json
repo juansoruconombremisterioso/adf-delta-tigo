@@ -12,11 +12,49 @@
 						"referenceName": "ds_silver_llamadas_entel",
 						"type": "DatasetReference"
 					},
-					"name": "source1"
+					"name": "fecha"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_silver_llamadas_entel",
+						"type": "DatasetReference"
+					},
+					"name": "fechaInicio"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_silver_datos_entel",
+						"type": "DatasetReference"
+					},
+					"name": "fechaFin"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_dim_fecha",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "union1"
+				},
+				{
+					"name": "union2"
+				},
+				{
+					"name": "sort1"
+				},
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "aggregate1"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          fecha as timestamp",
@@ -25,7 +63,46 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     query: 'SELECT DISTINCT fecha FROM silver.llamadas',",
-				"     format: 'query') ~> source1"
+				"     format: 'query') ~> fecha",
+				"source(output(",
+				"          fecha as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT DISTINCT fecha_inicio AS fecha FROM silver.datos',",
+				"     format: 'query') ~> fechaInicio",
+				"source(output(",
+				"          fecha as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT DISTINCT fecha_fin AS fecha FROM silver.datos',",
+				"     format: 'query') ~> fechaFin",
+				"fecha, fechaInicio union(byName: true)~> union1",
+				"union1, fechaFin union(byName: true)~> union2",
+				"union2 sort(asc(fecha, true)) ~> sort1",
+				"sort1 filter(!isNull(fecha)) ~> filter1",
+				"filter1 aggregate(groupBy(fecha),",
+				"     each(match(name!='fecha'), $$ = first($$))) ~> aggregate1",
+				"aggregate1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          id_fecha as integer,",
+				"          fecha as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          fecha",
+				"     )) ~> sink1"
 			]
 		}
 	}
