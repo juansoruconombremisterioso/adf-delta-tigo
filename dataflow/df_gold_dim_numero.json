@@ -12,44 +12,48 @@
 						"referenceName": "ds_silver_datos_entel",
 						"type": "DatasetReference"
 					},
-					"name": "source1"
+					"name": "numerosDatos"
 				},
 				{
 					"dataset": {
 						"referenceName": "ds_silver_llamadas_entel",
 						"type": "DatasetReference"
 					},
-					"name": "source2"
+					"name": "numerosA"
 				},
 				{
 					"dataset": {
 						"referenceName": "ds_silver_llamadas_entel",
 						"type": "DatasetReference"
 					},
-					"name": "source3"
+					"name": "numerosB"
 				}
 			],
 			"sinks": [],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "union1"
+				},
+				{
+					"name": "union2"
+				},
+				{
+					"name": "sort1"
+				},
+				{
+					"name": "aggregate1"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
-				"          fecha_inicio as timestamp,",
-				"          fecha_fin as timestamp,",
 				"          numero as string,",
-				"          imei as string,",
-				"          rbs_utilizada as string,",
-				"          celda as string,",
-				"          latitud as decimal(18,0),",
-				"          longitud as decimal(18,0),",
-				"          subidos as integer,",
-				"          descargados as integer,",
-				"          total as integer",
+				"          imei as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     query: 'SELECT DISTINCT numero AS numero FROM silver.datos',",
-				"     format: 'query') ~> source1",
+				"     query: 'SELECT DISTINCT numero, imei FROM silver.datos',",
+				"     format: 'query') ~> numerosDatos",
 				"source(output(",
 				"          servicio as string,",
 				"          registro as string,",
@@ -72,7 +76,7 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     query: 'SELECT DISTINCT numero_a AS numero FROM silver.llamadas',",
-				"     format: 'query') ~> source2",
+				"     format: 'query') ~> numerosA",
 				"source(output(",
 				"          servicio as string,",
 				"          registro as string,",
@@ -95,7 +99,13 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     query: 'SELECT DISTINCT numero_b AS numero FROM silver.llamadas',",
-				"     format: 'query') ~> source3"
+				"     format: 'query') ~> numerosB",
+				"numerosDatos, numerosA union(byName: true)~> union1",
+				"union1, numerosB union(byName: true)~> union2",
+				"union2 sort(asc(numero, true)) ~> sort1",
+				"sort1 aggregate(groupBy(numero),",
+				"     columna1 = ERROR_FUNCTION(''),",
+				"          each(match(name!='numero'), $$ = first($$))) ~> aggregate1"
 			]
 		}
 	}
