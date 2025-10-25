@@ -33,6 +33,9 @@
 				},
 				{
 					"name": "select1"
+				},
+				{
+					"name": "cast2"
 				}
 			],
 			"scriptLines": [
@@ -89,7 +92,11 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select1",
-				"select1 sink(allowSchemaDrift: true,",
+				"select1 cast(output(",
+				"          duracion as timestamp 'HH:mm:ss'",
+				"     ),",
+				"     errors: true) ~> cast2",
+				"cast2 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          servicio as string,",
@@ -116,7 +123,25 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          servicio,",
+				"          registro,",
+				"          numero_a,",
+				"          imei_a,",
+				"          rbs_utilizada_a,",
+				"          celda_a,",
+				"          latitud_a,",
+				"          longitud_a,",
+				"          numero_b,",
+				"          imei_b,",
+				"          rbs_utilizada_b,",
+				"          celda_b,",
+				"          latitud_b,",
+				"          longitud_b,",
+				"          fecha,",
+				"          duracion",
+				"     )) ~> sink1"
 			]
 		}
 	}
