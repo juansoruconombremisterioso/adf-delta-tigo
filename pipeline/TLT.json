@@ -23,7 +23,7 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "DROP TABLE dim_fecha\nDROP TABLE dim_numero\nDROP TABLE dim_radiobase\nDROP TABLE dim_registro\nDROP TABLE dim_servicio\nDROP TABLE hechos_datos\nDROP TABLE hechos_llamadas"
+							"text": "DROP TABLE IF EXISTS dim_fecha;\nDROP TABLE IF EXISTS dim_numero;\nDROP TABLE IF EXISTS dim_radiobase;\nDROP TABLE IF EXISTS dim_registro;\nDROP TABLE IF EXISTS dim_servicio;\nDROP TABLE IF EXISTS hechos_datos;\nDROP TABLE IF EXISTS hechos_llamadas;\n"
 						}
 					],
 					"scriptBlockExecutionTimeout": "02:00:00"
