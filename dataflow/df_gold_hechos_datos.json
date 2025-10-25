@@ -19,7 +19,8 @@
 						"referenceName": "ds_dim_numero",
 						"type": "DatasetReference"
 					},
-					"name": "numero"
+					"name": "numero",
+					"description": "Importar datos de ds_dim_numero"
 				},
 				{
 					"dataset": {
@@ -57,6 +58,12 @@
 				},
 				{
 					"name": "lookup3"
+				},
+				{
+					"name": "lookup4"
+				},
+				{
+					"name": "select2"
 				}
 			],
 			"scriptLines": [
@@ -78,22 +85,24 @@
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> source1",
 				"source(output(",
+				"          id_numero as integer,",
 				"          numero as string,",
 				"          imei as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     query: 'SELECT numero, imei FROM gold.dim_numero',",
+				"     query: 'SELECT id_numero, numero, imei FROM gold.dim_numero',",
 				"     format: 'query') ~> numero",
 				"source(output(",
-				"          id_fecha as integer,",
-				"          fecha as timestamp",
+				"          fecha as timestamp,",
+				"          id_fecha as integer",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     format: 'table') ~> fecha",
+				"     query: 'SELECT fecha, id_fecha FROM gold.dim_fecha',",
+				"     format: 'query') ~> fecha",
 				"source(output(",
 				"          id_radiobase as integer,",
 				"          radiobase as string,",
@@ -104,7 +113,8 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     format: 'table') ~> radiobase",
+				"     query: 'SELECT id_radiobase, radiobase, celda, latitud, longitud FROM gold.dim_radiobase',",
+				"     format: 'query') ~> radiobase",
 				"source1 select(mapColumn(",
 				"          fecha_inicio,",
 				"          fecha_fin,",
@@ -120,15 +130,29 @@
 				"     multiple: false,",
 				"     pickup: 'any',",
 				"     broadcast: 'auto')~> lookup1",
-				"lookup1, fecha lookup(fecha_inicio == fecha",
-				"     && fecha_fin == fecha,",
+				"lookup1, fecha lookup(fecha_inicio == fecha,",
 				"     multiple: false,",
 				"     pickup: 'any',",
 				"     broadcast: 'auto')~> lookup2",
-				"lookup2, radiobase lookup(select1@radiobase == radiobase@radiobase,",
+				"lookup4, radiobase lookup(select2@radiobase == radiobase@radiobase,",
 				"     multiple: false,",
 				"     pickup: 'any',",
 				"     broadcast: 'auto')~> lookup3",
+				"select2, fecha lookup(fecha_fin == fecha,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup4",
+				"lookup2 select(mapColumn(",
+				"          fecha_fin,",
+				"          radiobase,",
+				"          subidos,",
+				"          descargados,",
+				"          total,",
+				"          id_numero,",
+				"          id_fecha_inicio = id_fecha",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
 				"lookup3 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -148,7 +172,16 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          subidos,",
+				"          descargados,",
+				"          total,",
+				"          id_fecha_inicio,",
+				"          id_fecha_fin = id_fecha,",
+				"          id_numero,",
+				"          id_radiobase",
+				"     )) ~> sink1"
 			]
 		}
 	}
